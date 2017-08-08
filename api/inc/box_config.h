@@ -18,6 +18,7 @@
 #define __UVISOR_API_BOX_CONFIG_H__
 
 #include "api/inc/uvisor_exports.h"
+#include "api/inc/debug_exports.h"
 #include "api/inc/page_allocator_exports.h"
 #include "api/inc/rpc_exports.h"
 #include <stddef.h>
@@ -26,6 +27,7 @@
 
 UVISOR_EXTERN const uint32_t __uvisor_mode;
 UVISOR_EXTERN void const * const public_box_cfg_ptr;
+
 
 /* All pointers in the box index need to be 4-byte aligned.
  * We therefore also need to round up all sizes to 4-byte multiples to
@@ -38,12 +40,17 @@ UVISOR_EXTERN void const * const public_box_cfg_ptr;
 #define UVISOR_ENABLED    2
 
 #define UVISOR_SET_MODE(mode) \
-    UVISOR_SET_MODE_ACL_COUNT(mode, NULL, 0)
+    UVISOR_SET_MODE_ACL_COUNT_DBGBOX(mode, NULL, 0, NULL)
 
 #define UVISOR_SET_MODE_ACL(mode, acl_list) \
-    UVISOR_SET_MODE_ACL_COUNT(mode, acl_list, UVISOR_ARRAY_COUNT(acl_list))
+    UVISOR_SET_MODE_ACL_COUNT_DBGBOX(mode, acl_list, UVISOR_ARRAY_COUNT(acl_list), NULL)
 
-#define UVISOR_SET_MODE_ACL_COUNT(mode, acl_list, acl_list_count) \
+#define UVISOR_SET_MODE_ACL_DBGBOX(mode, acl_list, debug_box_ptr) \
+    UVISOR_SET_MODE_ACL_COUNT_DBGBOX(mode, acl_list, UVISOR_ARRAY_COUNT(acl_list), debug_box_ptr)
+
+
+
+#define UVISOR_SET_MODE_ACL_COUNT_DBGBOX(mode, acl_list, acl_list_count, debug_box_ptr) \
     uint8_t __attribute__((section(".keep.uvisor.bss.boxes"), aligned(32))) __reserved_stack[UVISOR_STACK_BAND_SIZE]; \
     \
     UVISOR_EXTERN const uint32_t __uvisor_mode = (mode); \
@@ -63,10 +70,12 @@ UVISOR_EXTERN void const * const public_box_cfg_ptr;
         NULL, \
         NULL, \
         acl_list, \
-        acl_list_count \
+        acl_list_count, \
+        debug_box_ptr \
     }; \
     \
     UVISOR_EXTERN const __attribute__((section(".keep.uvisor.cfgtbl_ptr_first"), aligned(4))) void * const public_box_cfg_ptr = &public_box_cfg;
+
 
 /* Creates a global page heap with at least `minimum_number_of_pages` each of size `page_size` in bytes.
  * The total page heap size is at least `minimum_number_of_pages * page_size`. */
@@ -79,7 +88,7 @@ UVISOR_EXTERN void const * const public_box_cfg_ptr;
 /* this macro selects an overloaded macro (variable number of arguments) */
 #define __UVISOR_BOX_MACRO(_1, _2, _3, _4, NAME, ...) NAME
 
-#define __UVISOR_BOX_CONFIG(box_name, acl_list, acl_list_count, stack_size, context_size) \
+#define __UVISOR_BOX_CONFIG(box_name, acl_list, acl_list_count, stack_size, context_size, debug_box_ptr) \
     \
     uint8_t __attribute__((section(".keep.uvisor.bss.boxes"), aligned(32))) \
         box_name ## _reserved[ \
@@ -112,27 +121,31 @@ UVISOR_EXTERN void const * const public_box_cfg_ptr;
         __uvisor_box_lib_config, \
         __uvisor_box_namespace, \
         acl_list, \
-        acl_list_count \
+        acl_list_count, \
+        debug_box_ptr \
     }; \
     \
     UVISOR_EXTERN const __attribute__((section(".keep.uvisor.cfgtbl_ptr"), aligned(4))) void * const box_name ## _cfg_ptr = &box_name ## _cfg;
 
+
 #define UVISOR_BOX_EXTERN(box_name) \
     UVISOR_EXTERN const __attribute__((section(".keep.uvisor.cfgtbl_ptr"), aligned(4))) void * const box_name ## _cfg_ptr;
 
+
 #define __UVISOR_BOX_CONFIG_NOCONTEXT(box_name, acl_list, stack_size) \
-    __UVISOR_BOX_CONFIG(box_name, acl_list, UVISOR_ARRAY_COUNT(acl_list), stack_size, 0) \
+    __UVISOR_BOX_CONFIG(box_name, acl_list, UVISOR_ARRAY_COUNT(acl_list), stack_size, 0, NULL) \
 
 #define __UVISOR_BOX_CONFIG_CONTEXT(box_name, acl_list, stack_size, context_type) \
-    __UVISOR_BOX_CONFIG(box_name, acl_list, UVISOR_ARRAY_COUNT(acl_list), stack_size, sizeof(context_type)) \
+    __UVISOR_BOX_CONFIG(box_name, acl_list, UVISOR_ARRAY_COUNT(acl_list), stack_size, sizeof(context_type), NULL) \
     UVISOR_EXTERN context_type *const *const __uvisor_ps;
 
 #define __UVISOR_BOX_CONFIG_NOACL(box_name, stack_size, context_type) \
-    __UVISOR_BOX_CONFIG(box_name, NULL, 0, stack_size, sizeof(context_type)) \
+    __UVISOR_BOX_CONFIG(box_name, NULL, 0, stack_size, sizeof(context_type), NULL) \
     UVISOR_EXTERN context_type *const *const __uvisor_ps;
 
 #define __UVISOR_BOX_CONFIG_NOACL_NOCONTEXT(box_name, stack_size) \
-    __UVISOR_BOX_CONFIG(box_name, NULL, 0, stack_size, 0)
+    __UVISOR_BOX_CONFIG(box_name, NULL, 0, stack_size, 0, NULL)
+
 
 #define UVISOR_BOX_CONFIG_ACL(...) \
     __UVISOR_BOX_MACRO(__VA_ARGS__, __UVISOR_BOX_CONFIG_CONTEXT, \
@@ -168,5 +181,14 @@ UVISOR_EXTERN void const * const public_box_cfg_ptr;
     static const uint32_t __uvisor_box_heapsize = heap_size;
 
 #define __uvisor_ctx (((UvisorBoxIndex *) __uvisor_ps)->bss.address_of.context)
+
+
+#define UVISOR_SET_DEBUG_BOX(halt_error_func) \
+        static TUvisorDebugDriver const g_driver = { \
+            UVISOR_DEBUG_BOX_MAGIC, \
+            UVISOR_DEBUG_BOX_VERSION, \
+            halt_error_func \
+        };
+
 
 #endif /* __UVISOR_API_BOX_CONFIG_H__ */
