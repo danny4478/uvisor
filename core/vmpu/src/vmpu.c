@@ -16,6 +16,8 @@
  */
 #include <uvisor.h>
 #include "api/inc/box_config.h"
+#include "api/inc/debug_exports.h"
+#include "api/inc/uvisor_exports.h"
 #include "box_init.h"
 #include "debug.h"
 #include "context.h"
@@ -28,6 +30,10 @@
 #include "vmpu_unpriv_access.h"
 #include <sys/reent.h>
 
+
+#define MAX_DEBUG_BOX_COUNT     (1)
+
+uint32_t g_debug_interrupt_sp[UVISOR_MAX_BOXES];
 uint8_t g_vmpu_box_count;
 bool g_vmpu_boxes_counted;
 
@@ -268,6 +274,17 @@ static void vmpu_check_sanity_box_cfgtbl(uint8_t box_id, UvisorBoxConfig const *
 
     /* Check that the box namespace is not too long. */
     vmpu_check_sanity_box_namespace(box_id, box_cfgtbl->box_namespace);
+
+    if(box_cfgtbl->debug_box_ptr != NULL) {
+        if(box_cfgtbl->debug_box_ptr->magic != UVISOR_DEBUG_BOX_MAGIC) {
+            HALT_ERROR(SANITY_CHECK_FAILED, "Box %i @0x%08X: Wrong debug box magic.\r\n",
+                       box_id, (uint32_t) box_cfgtbl);
+        }
+        if(box_cfgtbl->debug_box_ptr->version != UVISOR_DEBUG_BOX_VERSION) {
+            HALT_ERROR(SANITY_CHECK_FAILED, "Box %i @0x%08X: Wrong debug box version.\r\n",
+                       box_id, (uint32_t) box_cfgtbl);
+        }
+    }
 }
 
 static void vmpu_box_index_init(uint8_t box_id, UvisorBoxConfig const * const box_cfgtbl, void * const bss_start)
@@ -398,6 +415,9 @@ static void vmpu_configure_box_sram(uint8_t box_id, UvisorBoxConfig const * box_
 
 static void vmpu_enumerate_boxes(void)
 {
+    uint8_t debug_box_count = 0;
+    bool debug_box_validated = FALSE;
+
     /* Enumerate boxes. */
     g_vmpu_box_count = (uint32_t) (__uvisor_config.cfgtbl_ptr_end - __uvisor_config.cfgtbl_ptr_start);
     if (g_vmpu_box_count >= UVISOR_MAX_BOXES) {
@@ -415,6 +435,18 @@ static void vmpu_enumerate_boxes(void)
         int index = box_order[box_id];
         UvisorBoxConfig const * box_cfgtbl = ((UvisorBoxConfig const * *) __uvisor_config.cfgtbl_ptr_start)[index];
 
+        if(box_cfgtbl->debug_box_ptr != NULL) {
+            if(++debug_box_count > MAX_DEBUG_BOX_COUNT) {
+                HALT_ERROR(SANITY_CHECK_FAILED, "More than one box is registered to the debug box!\n");
+            }
+
+            g_debug_box.driver = box_cfgtbl->debug_box_ptr;
+            g_debug_box.box_id = box_id;
+
+            /* Set g_debug_box.initialized only after g_debug_interrupt_sp[] is set */
+            debug_box_validated = TRUE;
+        }
+
         /* Verify the box configuration table. */
         /* Note: This function halts if a sanity check fails. */
         vmpu_check_sanity_box_cfgtbl(index, box_cfgtbl);
@@ -430,6 +462,13 @@ static void vmpu_enumerate_boxes(void)
         vmpu_configure_box_peripherals(index, box_cfgtbl);
 
         box_init(index, box_cfgtbl);
+    }
+
+    if(debug_box_validated) {
+        for (int ii = 0; ii < UVISOR_MAX_BOXES; ii++) {
+            g_debug_interrupt_sp[ii] = g_context_current_states[ii].sp;
+        }
+        g_debug_box.initialized = 1;
     }
 
     /* Load box 0. */
