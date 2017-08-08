@@ -19,11 +19,17 @@
 
 #include <stdint.h>
 
+
+#define UVISOR_DEBUG_BOX_MAGIC      (0xDB4807DB)
+#define UVISOR_DEBUG_BOX_VERSION    (1)
+
+
 /* Debug box driver -- Version 0
  * A constant instance of this struct must be instantiated by the unprivileged
  * code to setup a debug box.*/
 typedef struct TUvisorDebugDriver {
-    uint32_t (*get_version)(void);
+    const uint32_t magic;
+    const uint32_t version;
     void (*halt_error)(int);
 } TUvisorDebugDriver;
 
