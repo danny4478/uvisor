@@ -436,6 +436,9 @@ static void vmpu_enumerate_boxes(void)
             if(++debug_box_count > MAX_DEBUG_BOX_COUNT) {
                 HALT_ERROR(SANITY_CHECK_FAILED, "More than one box is registered to the debug box!\n");
             }
+            g_debug_box.driver = box_cfgtbl->debug_box_ptr;
+            g_debug_box.box_id = box_id;
+            g_debug_box.initialized = 1;
         }
 
         /* Verify the box configuration table. */
