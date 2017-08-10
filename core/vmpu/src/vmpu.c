@@ -17,6 +17,7 @@
 #include <uvisor.h>
 #include "api/inc/box_config.h"
 #include "api/inc/debug_exports.h"
+#include "api/inc/uvisor_exports.h"
 #include "box_init.h"
 #include "debug.h"
 #include "context.h"
@@ -31,6 +32,8 @@
 
 
 #define MAX_DEBUG_BOX_COUNT     (1)
+
+extern uint32_t g_debug_interrupt_sp[];
 
 uint8_t g_vmpu_box_count;
 bool g_vmpu_boxes_counted;
@@ -436,6 +439,7 @@ static void vmpu_enumerate_boxes(void)
             if(++debug_box_count > MAX_DEBUG_BOX_COUNT) {
                 HALT_ERROR(SANITY_CHECK_FAILED, "More than one box is registered to the debug box!\n");
             }
+
             g_debug_box.driver = box_cfgtbl->debug_box_ptr;
             g_debug_box.box_id = box_id;
             g_debug_box.initialized = 1;
@@ -449,6 +453,11 @@ static void vmpu_enumerate_boxes(void)
 
         /* Add the box ACL for the static SRAM memories. */
         vmpu_configure_box_sram(index, box_cfgtbl);
+
+        for (int ii = 0; ii < UVISOR_MAX_BOXES; ii++)
+        {
+            g_debug_interrupt_sp[ii] = g_context_current_states[ii].sp;
+        }
 
         /* Add the box ACLs for peripherals. */
         /* MUST call this function with the new indexing since it is a stateful */
