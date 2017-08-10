@@ -33,8 +33,7 @@
 
 #define MAX_DEBUG_BOX_COUNT     (1)
 
-extern uint32_t g_debug_interrupt_sp[];
-
+uint32_t g_debug_interrupt_sp[UVISOR_MAX_BOXES];
 uint8_t g_vmpu_box_count;
 bool g_vmpu_boxes_counted;
 
@@ -417,6 +416,7 @@ static void vmpu_configure_box_sram(uint8_t box_id, UvisorBoxConfig const * box_
 static void vmpu_enumerate_boxes(void)
 {
     uint8_t debug_box_count = 0;
+    bool debug_box_validated = FALSE;
 
     /* Enumerate boxes. */
     g_vmpu_box_count = (uint32_t) (__uvisor_config.cfgtbl_ptr_end - __uvisor_config.cfgtbl_ptr_start);
@@ -442,7 +442,9 @@ static void vmpu_enumerate_boxes(void)
 
             g_debug_box.driver = box_cfgtbl->debug_box_ptr;
             g_debug_box.box_id = box_id;
-            g_debug_box.initialized = 1;
+
+            /* Set g_debug_box.initialized only after g_debug_interrupt_sp[] is set */
+            debug_box_validated = TRUE;
         }
 
         /* Verify the box configuration table. */
@@ -454,17 +456,20 @@ static void vmpu_enumerate_boxes(void)
         /* Add the box ACL for the static SRAM memories. */
         vmpu_configure_box_sram(index, box_cfgtbl);
 
-        for (int ii = 0; ii < UVISOR_MAX_BOXES; ii++)
-        {
-            g_debug_interrupt_sp[ii] = g_context_current_states[ii].sp;
-        }
-
         /* Add the box ACLs for peripherals. */
         /* MUST call this function with the new indexing since it is a stateful */
         /*   as it is increments g_mpu_region in call order */
         vmpu_configure_box_peripherals(index, box_cfgtbl);
 
         box_init(index, box_cfgtbl);
+    }
+
+    if(debug_box_validated) {
+        for (int ii = 0; ii < UVISOR_MAX_BOXES; ii++)
+        {
+            g_debug_interrupt_sp[ii] = g_context_current_states[ii].sp;
+        }
+        g_debug_box.initialized = 1;
     }
 
     /* Load box 0. */

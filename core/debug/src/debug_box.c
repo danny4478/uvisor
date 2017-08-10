@@ -65,7 +65,6 @@ void debug_halt_error(THaltError reason)
     }
 }
 
-uint32_t g_debug_interrupt_sp[UVISOR_MAX_BOXES];
 
 /* FIXME This is a bit platform specific. Consider moving to a platform
  * specific location. */
