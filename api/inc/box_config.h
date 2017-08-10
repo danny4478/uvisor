@@ -184,7 +184,7 @@ UVISOR_EXTERN void const * const public_box_cfg_ptr;
 
 
 #define UVISOR_SET_DEBUG_BOX(halt_error_func) \
-        static TUvisorDebugDriver const g_driver = { \
+        static TUvisorDebugDriver const g_debug_driver = { \
             UVISOR_DEBUG_BOX_MAGIC, \
             UVISOR_DEBUG_BOX_VERSION, \
             halt_error_func \
