@@ -192,6 +192,8 @@ UVISOR_EXTERN void const * const public_box_cfg_ptr;
 #define __uvisor_ctx (((UvisorBoxIndex *) __uvisor_ps)->bss.address_of.context)
 
 
+/* Use this macro before trying to configure a box with debug_box enabled.
+ * It will declare g_debug_driver and use the parameter as its halt_error() function */
 #define UVISOR_SET_DEBUG_BOX(halt_error_func) \
         static TUvisorDebugDriver const g_debug_driver = { \
             UVISOR_DEBUG_BOX_MAGIC, \

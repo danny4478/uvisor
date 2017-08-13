@@ -278,11 +278,11 @@ static void vmpu_check_sanity_box_cfgtbl(uint8_t box_id, UvisorBoxConfig const *
     if(box_cfgtbl->debug_box_ptr != NULL) {
         if(box_cfgtbl->debug_box_ptr->magic != UVISOR_DEBUG_BOX_MAGIC) {
             HALT_ERROR(SANITY_CHECK_FAILED, "Box %i @0x%08X: Wrong debug box magic.\r\n",
-                                   box_id, (uint32_t) box_cfgtbl);
+                       box_id, (uint32_t) box_cfgtbl);
         }
         if(box_cfgtbl->debug_box_ptr->version != UVISOR_DEBUG_BOX_VERSION) {
             HALT_ERROR(SANITY_CHECK_FAILED, "Box %i @0x%08X: Wrong debug box version.\r\n",
-                                               box_id, (uint32_t) box_cfgtbl);
+                       box_id, (uint32_t) box_cfgtbl);
         }
     }
 }
@@ -465,8 +465,7 @@ static void vmpu_enumerate_boxes(void)
     }
 
     if(debug_box_validated) {
-        for (int ii = 0; ii < UVISOR_MAX_BOXES; ii++)
-        {
+        for (int ii = 0; ii < UVISOR_MAX_BOXES; ii++) {
             g_debug_interrupt_sp[ii] = g_context_current_states[ii].sp;
         }
         g_debug_box.initialized = 1;
