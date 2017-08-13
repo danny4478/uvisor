@@ -132,35 +132,44 @@ UVISOR_EXTERN void const * const public_box_cfg_ptr;
     UVISOR_EXTERN const __attribute__((section(".keep.uvisor.cfgtbl_ptr"), aligned(4))) void * const box_name ## _cfg_ptr;
 
 
-#define __UVISOR_BOX_CONFIG_NOCONTEXT(box_name, acl_list, stack_size) \
-    __UVISOR_BOX_CONFIG(box_name, acl_list, UVISOR_ARRAY_COUNT(acl_list), stack_size, 0, NULL) \
+#define __UVISOR_BOX_CONFIG_NOCONTEXT(box_name, acl_list, stack_size, debug_box_ptr) \
+    __UVISOR_BOX_CONFIG(box_name, acl_list, UVISOR_ARRAY_COUNT(acl_list), stack_size, 0, debug_box_ptr) \
 
-#define __UVISOR_BOX_CONFIG_CONTEXT(box_name, acl_list, stack_size, context_type) \
-    __UVISOR_BOX_CONFIG(box_name, acl_list, UVISOR_ARRAY_COUNT(acl_list), stack_size, sizeof(context_type), NULL) \
+#define __UVISOR_BOX_CONFIG_CONTEXT(box_name, acl_list, stack_size, context_type, debug_box_ptr) \
+    __UVISOR_BOX_CONFIG(box_name, acl_list, UVISOR_ARRAY_COUNT(acl_list), stack_size, sizeof(context_type), debug_box_ptr) \
     UVISOR_EXTERN context_type *const *const __uvisor_ps;
 
-#define __UVISOR_BOX_CONFIG_NOACL(box_name, stack_size, context_type) \
-    __UVISOR_BOX_CONFIG(box_name, NULL, 0, stack_size, sizeof(context_type), NULL) \
+#define __UVISOR_BOX_CONFIG_NOACL(box_name, stack_size, context_type, debug_box_ptr) \
+    __UVISOR_BOX_CONFIG(box_name, NULL, 0, stack_size, sizeof(context_type), debug_box_ptr) \
     UVISOR_EXTERN context_type *const *const __uvisor_ps;
 
-#define __UVISOR_BOX_CONFIG_NOACL_NOCONTEXT(box_name, stack_size) \
-    __UVISOR_BOX_CONFIG(box_name, NULL, 0, stack_size, 0, NULL)
+#define __UVISOR_BOX_CONFIG_NOACL_NOCONTEXT(box_name, stack_size, debug_box_ptr) \
+    __UVISOR_BOX_CONFIG(box_name, NULL, 0, stack_size, 0, debug_box_ptr)
 
 
-#define UVISOR_BOX_CONFIG_ACL(...) \
+#define UVISOR_BOX_CONFIG(...) \
     __UVISOR_BOX_MACRO(__VA_ARGS__, __UVISOR_BOX_CONFIG_CONTEXT, \
                                     __UVISOR_BOX_CONFIG_NOCONTEXT, \
-                                    __UVISOR_BOX_CONFIG_NOACL_NOCONTEXT)(__VA_ARGS__)
+                                    __UVISOR_BOX_CONFIG_NOACL_NOCONTEXT)(__VA_ARGS__, NULL)
+
+#define UVISOR_BOX_CONFIG_DBGBOX(debug_box_ptr, ...) \
+    __UVISOR_BOX_MACRO(__VA_ARGS__, __UVISOR_BOX_CONFIG_CONTEXT, \
+                                    __UVISOR_BOX_CONFIG_NOCONTEXT, \
+                                    __UVISOR_BOX_CONFIG_NOACL_NOCONTEXT)(__VA_ARGS__, debug_box_ptr)
+
 
 #define UVISOR_BOX_CONFIG_CTX(...) \
     __UVISOR_BOX_MACRO(__VA_ARGS__, __UVISOR_BOX_CONFIG_CONTEXT, \
                                     __UVISOR_BOX_CONFIG_NOACL, \
-                                    __UVISOR_BOX_CONFIG_NOACL_NOCONTEXT)(__VA_ARGS__)
+                                    __UVISOR_BOX_CONFIG_NOACL_NOCONTEXT)(__VA_ARGS__, NULL)
 
-#define UVISOR_BOX_CONFIG(...) \
-    UVISOR_BOX_CONFIG_ACL(__VA_ARGS__)
+#define UVISOR_BOX_CONFIG_CTX_DBGBOX(debug_box_ptr, ...) \
+    __UVISOR_BOX_MACRO(__VA_ARGS__, __UVISOR_BOX_CONFIG_CONTEXT, \
+                                    __UVISOR_BOX_CONFIG_NOACL, \
+                                    __UVISOR_BOX_CONFIG_NOACL_NOCONTEXT)(__VA_ARGS__, debug_box_ptr)
 
-/* Use this macro before box defintion (for example, UVISOR_BOX_CONFIG) to
+
+/* Use this macro before box definition (for example, UVISOR_BOX_CONFIG) to
  * define the name of your box. If you don't want a name, use this macro with
  * box_namespace as NULL. */
 #define UVISOR_BOX_NAMESPACE(box_namespace) \
