@@ -121,16 +121,17 @@ The uVisor code is instrumented to output debug information when it is relevant.
 
 Instead, debug events and messages are forwarded to a special unprivileged box, called a *debug box*. A debug box is configured just like any other secure box, but it registers with uVisor to handle debug callbacks. These callbacks must adhere to a format that uVisor provides, in the form of a debug box driver.
 
-The debug box driver is encoded in a standard table (a C `struct`) that a debug box must populate at initialization time. A debug box can decide to implement only some of the available handlers though they must all exist at least as empty functions. Otherwise, the program behavior might be unpredictable.
+The debug box driver is encoded in a standard table (a C `struct`) that a debug box must populate statically. A debug box can decide to implement only some of the available handlers though they must all exist at least as empty functions. Otherwise, the program behavior might be unpredictable.
 
-The debug handler — `halt_error` — only executes once, so if another fault occurs during its execution, the uVisor does not deprivilege again. It halts instead. A debug box driver also expects a `get_version()` handler in position 0 of the function table:
+The debug handler — `halt_error` — only executes once, so if another fault occurs during its execution, the uVisor does not deprivilege again. It halts instead.
 
 Debug box handlers can also reset the device by calling the `NVIC_SystemReset()` API. This API cannot be called from other secure boxes.
 
 ```C
 typedef struct TUvisorDebugDriver {
-  uint32_t (*get_version)(void);      /* 0. Return the implemented driver version. */
-  void (*halt_error)(int);            /* 1. Halt on error. Halt upon return. */
+  const uint32_t magic;               /* 0. Debug driver magic number. */
+  const uint32_t version;             /* 1. Debug driver version number. */
+  void (*halt_error)(int);            /* 2. Halt on error. Halt upon return. */
 }
 ```
 
@@ -144,17 +145,6 @@ static const UvisorBoxAclItem acl[] = {
     /* No specific ACL required. */
 };
 
-static void box_debug_main(const void *);
-
-/* Configure the debug box. */
-UVISOR_BOX_NAMESPACE(NULL);
-UVISOR_BOX_HEAPSIZE(2048);
-UVISOR_BOX_MAIN(box_debug_main, osPriorityNormal, 1024);
-UVISOR_BOX_CONFIG(box_debug, 1024);
-
-static uint32_t get_version(void) {
-    return 0;
-}
 
 static void halt_error(int reason) {
     printf("We halted with reason %i\r\n", reason);
@@ -165,17 +155,16 @@ static void halt_error(int reason) {
     NVIC_SystemReset();
 }
 
-static void box_debug_main(const void *)
-{
-    /* Debug box driver -- Version 0 */
-    static const TUvisorDebugDriver driver = {
-        get_version,
-        halt_error
-    };
+/* Create a valid debug driver struct and use example_halt_error() as its halt_error() function */
+/* This must come before calling the box configuration macro UVISOR_BOX_CONFIG_DBGBOX */
+UVISOR_GENERATE_DEBUG_DRIVER(example_halt_error);
 
-    /* Register the debug box with uVisor. */
-    uvisor_debug_init(&driver);
-}
+/* Configure the debug box. */
+UVISOR_BOX_NAMESPACE(NULL);
+UVISOR_BOX_HEAPSIZE(2048);
+UVISOR_BOX_MAIN(box_debug_main, osPriorityNormal, 1024);
+UVISOR_BOX_CONFIG_DBGBOX(box_debug, 1024);
+
 ```
 
 ## Platform-specific details
