@@ -45,8 +45,8 @@ UVISOR_EXTERN void const * const public_box_cfg_ptr;
 #define UVISOR_SET_MODE_ACL(mode, acl_list) \
     UVISOR_SET_MODE_ACL_COUNT_DBGBOX(mode, acl_list, UVISOR_ARRAY_COUNT(acl_list), NULL)
 
-#define UVISOR_SET_MODE_ACL_DBGBOX(mode, acl_list, debug_box_ptr) \
-    UVISOR_SET_MODE_ACL_COUNT_DBGBOX(mode, acl_list, UVISOR_ARRAY_COUNT(acl_list), debug_box_ptr)
+#define UVISOR_SET_MODE_ACL_DBGBOX(mode, acl_list) \
+    UVISOR_SET_MODE_ACL_COUNT_DBGBOX(mode, acl_list, UVISOR_ARRAY_COUNT(acl_list), &g_debug_driver)
 
 
 
@@ -152,10 +152,10 @@ UVISOR_EXTERN void const * const public_box_cfg_ptr;
                                     __UVISOR_BOX_CONFIG_NOCONTEXT, \
                                     __UVISOR_BOX_CONFIG_NOACL_NOCONTEXT)(__VA_ARGS__, NULL)
 
-#define UVISOR_BOX_CONFIG_DBGBOX(debug_box_ptr, ...) \
+#define UVISOR_BOX_CONFIG_DBGBOX(...) \
     __UVISOR_BOX_MACRO(__VA_ARGS__, __UVISOR_BOX_CONFIG_CONTEXT, \
                                     __UVISOR_BOX_CONFIG_NOCONTEXT, \
-                                    __UVISOR_BOX_CONFIG_NOACL_NOCONTEXT)(__VA_ARGS__, debug_box_ptr)
+                                    __UVISOR_BOX_CONFIG_NOACL_NOCONTEXT)(__VA_ARGS__, &g_debug_driver)
 
 
 #define UVISOR_BOX_CONFIG_CTX(...) \
@@ -163,10 +163,10 @@ UVISOR_EXTERN void const * const public_box_cfg_ptr;
                                     __UVISOR_BOX_CONFIG_NOACL, \
                                     __UVISOR_BOX_CONFIG_NOACL_NOCONTEXT)(__VA_ARGS__, NULL)
 
-#define UVISOR_BOX_CONFIG_CTX_DBGBOX(debug_box_ptr, ...) \
+#define UVISOR_BOX_CONFIG_CTX_DBGBOX(...) \
     __UVISOR_BOX_MACRO(__VA_ARGS__, __UVISOR_BOX_CONFIG_CONTEXT, \
                                     __UVISOR_BOX_CONFIG_NOACL, \
-                                    __UVISOR_BOX_CONFIG_NOACL_NOCONTEXT)(__VA_ARGS__, debug_box_ptr)
+                                    __UVISOR_BOX_CONFIG_NOACL_NOCONTEXT)(__VA_ARGS__, &g_debug_driver)
 
 
 /* Use this macro before box definition (for example, UVISOR_BOX_CONFIG) to
@@ -193,8 +193,8 @@ UVISOR_EXTERN void const * const public_box_cfg_ptr;
 
 
 /* Use this macro before trying to configure a box with debug_box enabled.
- * It will declare g_debug_driver and use the parameter as its halt_error() function */
-#define UVISOR_SET_DEBUG_BOX(halt_error_func) \
+ * It will create a valid debug driver struct with the halt_error_func parameter as its halt_error() function */
+#define UVISOR_GENERATE_DEBUG_DRIVER(halt_error_func) \
         static TUvisorDebugDriver const g_debug_driver = { \
             UVISOR_DEBUG_BOX_MAGIC, \
             UVISOR_DEBUG_BOX_VERSION, \
