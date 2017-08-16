@@ -47,6 +47,12 @@
 #define UVISOR_EXTERN_C_END
 #endif
 
+#ifdef  __cplusplus
+#define UVISOR_EXTERN_C extern "C"
+#else
+#define UVISOR_EXTERN_C
+#endif
+
 /* asm keyword */
 #ifndef asm
 #define asm __asm__

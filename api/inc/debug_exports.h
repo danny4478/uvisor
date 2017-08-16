@@ -19,18 +19,19 @@
 
 #include "api/inc/halt_exports.h"
 #include <stdint.h>
+#include "api/inc/vmpu_exports.h"
 
 
-#define UVISOR_DEBUG_BOX_MAGIC      (0xDB4807DB)
 #define UVISOR_DEBUG_BOX_VERSION    (1)
 
 
-/* Debug box driver -- Version 0
+/* Debug box driver -- Version 1
  * A constant instance of this struct must be instantiated by the unprivileged
  * code to setup a debug box.*/
 typedef struct TUvisorDebugDriver {
     const uint32_t magic;
     const uint32_t version;
+    const UvisorBoxConfig * box_cfg_ptr;
     void (*halt_error)(THaltError, const THaltInfo *);
 } TUvisorDebugDriver;
 
