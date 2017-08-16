@@ -19,7 +19,6 @@
 
 #include "api/inc/uvisor_exports.h"
 #include "api/inc/pool_queue_exports.h"
-#include "api/inc/debug_exports.h"
 #include <stdint.h>
 
 /* The maximum box namespace length is 37 so that it is exactly big enough for
@@ -196,7 +195,6 @@ typedef struct {
     const char * const box_namespace;
     const UvisorBoxAclItem * const acl_list;
     const uint32_t acl_count;
-    const TUvisorDebugDriver * debug_box_ptr;
 } UVISOR_PACKED UvisorBoxConfig;
 
 /* Enumeration-time per-box index table
