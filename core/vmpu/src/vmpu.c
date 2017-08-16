@@ -422,7 +422,7 @@ static void vmpu_enumerate_boxes(void)
 
         /* If a debug driver was created by the application and it is associated to this box_id,
          * initialize g_debug_box accordingly.
-         * Note: The verification that no more than one box has created and associated with the debug driver
+         * Note: The verification that no more than one box was created and been associated with the debug driver
          * is done statically on debug driver creation time [in build time] */
         if (__uvisor_config.debug_driver_ptr != NULL) {
             if (__uvisor_config.debug_driver_ptr->box_cfg_ptr == box_cfgtbl) {
