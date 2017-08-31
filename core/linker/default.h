@@ -39,7 +39,11 @@ ENTRY(main_entry)
 /* Default uVisor stack size
  * Note: This is uVisor own stack, not the boxes' stack. */
 #if !defined(STACK_SIZE)
+#if defined (__ARM_FEATURE_CMSE) && (__ARM_FEATURE_CMSE == 3U)
 #define STACK_SIZE 2048
+#else
+#define STACK_SIZE 3072
+#endif
 #endif /* !defined(STACK_SIZE) */
 
 #if !defined(SECURE_ALIAS_OFFSET)
@@ -60,7 +64,11 @@ ENTRY(main_entry)
  *       stack from the rest of the protected memories. For this reason the
  *       symbol is arbitrarily small and cannot be defined by the
  *       platform-specific configurations. */
+#if defined (__ARM_FEATURE_CMSE) && (__ARM_FEATURE_CMSE == 3U)
 #define STACK_GUARD_BAND 32
+#else
+#define STACK_GUARD_BAND 512
+#endif
 
 MEMORY
 {
@@ -149,6 +157,9 @@ SECTIONS
         __uvisor_stack_end_np__ = .;
 
         /* Privileged stack for v7-M and v8-M. */
+        . = ALIGN(0x1000);
+        __uvisor_stack_start_boundary__ = .;
+        . += STACK_GUARD_BAND;
         __uvisor_stack_start__ = .;
         . += STACK_SIZE;
         __uvisor_stack_top__ = .;

@@ -515,6 +515,14 @@ void vmpu_arch_init_hw(void)
                    "The page size (%ukB) must not be larger than 1/8th of SRAM (%ukB).",
                    *__uvisor_config.page_size / 1024, subregions_size / 1024);
     }
+
+    vmpu_mpu_set_static_acl(
+        7,      // Highest possible to overwrite overlapping regions
+        __uvisor_stack_start__,
+        0x1000,
+        UVISOR_TACLDEF_DATA | UVISOR_TACL_EXECUTE,
+        0x7E    // 0b01111110: Stack guard on top and on bottom
+    );
 }
 
 static void swap_boxes(int * const b1, int * const b2)
