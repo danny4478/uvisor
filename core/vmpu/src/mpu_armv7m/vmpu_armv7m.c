@@ -518,7 +518,7 @@ void vmpu_arch_init_hw(void)
 
     vmpu_mpu_set_static_acl(
         7,      /* Highest possible to overwrite overlapping regions */
-        __uvisor_stack_start__,
+        __uvisor_stack_start_boundary__,
         0x1000,
         0,      /* No access */
         0x7E    /* 0b01111110: Sub region disable:
