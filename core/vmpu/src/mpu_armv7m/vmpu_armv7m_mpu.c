@@ -475,7 +475,7 @@ uint32_t vmpu_mpu_set_static_acl(uint8_t index, uint32_t start, uint32_t size,
     MpuRegion region;
     uint32_t rounded_size;
 
-    if (index >= ARMv7M_MPU_REGIONS_STATIC) {
+    if ((index >= ARMv7M_MPU_REGIONS_STATIC) && (index != ARMv7M_MPU_REGIONS_MAX)) {
         HALT_ERROR(SANITY_CHECK_FAILED, "vmpu_mpu_set_static_region: Invalid region index (%u)!\n", index);
         return 0;
     }
