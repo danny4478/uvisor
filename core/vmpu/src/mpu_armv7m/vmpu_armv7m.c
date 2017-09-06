@@ -517,13 +517,13 @@ void vmpu_arch_init_hw(void)
     }
 
     vmpu_mpu_set_static_acl(
-        7,      /* Highest possible to overwrite overlapping regions */
+        2,
         (uint32_t) &__uvisor_stack_start_boundary__,
-        0x1000,
+        (uint32_t) &__uvisor_stack_end__ - (uint32_t) &__uvisor_stack_start_boundary__,
         0,      /* No access */
         0x7E    /* 0b01111110: Sub region disable:
                                * Stack guard on top and on bottom remain with "No access" permissions.
-                               * uVisor stack bytes inherit access permissions of "Privileged access only */
+                               * uVisor stack bytes inherit access permissions of "Privileged access only" */
     );
 }
 

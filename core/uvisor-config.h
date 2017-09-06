@@ -40,7 +40,7 @@
  * is configuration-specific. See \ref UVISOR_SRAM_LENGTH_USED for more
  * information.
  */
-#define UVISOR_SRAM_LENGTH_PROTECTED 0x4000
+#define UVISOR_SRAM_LENGTH_PROTECTED 0x2000
 
 /** Actual SRAM space that will be used by uVisor
  * This is the space that is reserved by the uVisor in the host linker script.
