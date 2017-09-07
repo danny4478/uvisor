@@ -42,7 +42,7 @@
 
 /* The ARMv7-M MPU has 8 MPU regions plus one background region.
  * Region 0 and 1 are used to unlock Application RAM and Flash.
- * In ARMv7-M MPU, region 2 is used to unlock uVisor's own stack.
+ * In ARMv7-M MPU, region 2 is used to protect uVisor's own stack.
  * When switching into a secure box, region 3 is used to protect the boxes
  * stack and context.
  * If a box uses the page heap, the next region is used to protect it.
@@ -58,7 +58,7 @@
  * +---------+
  * |    3    | <-- Secure Box Stack + Context, ARMv7M_MPU_REGIONS_STATIC
  * +---------+
- * |    2    | <-- uVisor's stack unlock
+ * |    2    | <-- uVisor's stack protection
  * |    1    | <-- Application SRAM unlock
  * |    0    | <-- Application Flash unlock
  * +---------+

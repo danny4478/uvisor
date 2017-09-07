@@ -53,7 +53,7 @@ ENTRY(main_entry)
 * |  [STACK_GUARD_BAND] |       /
 * '---------------------'    --
 */
-#define TOTAL_STACK_SIZE 2048   /* Must be a power of 2 */
+#define TOTAL_STACK_SIZE 2048   /* Must be a power of 2 for MPU configurations */
 /* Default uVisor own stack guard band
  * Note: Currently we use the stack guard to isolate the uVisor stack on
  *       MPU_ARMv7M MPU architecture only.
