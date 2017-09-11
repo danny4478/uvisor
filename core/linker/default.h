@@ -38,6 +38,7 @@ ENTRY(main_entry)
 
 
 #ifdef ARCH_MPU_ARMv7M
+
 /* uVisor stack on MPU_ARMv7M MPU architecture:
 *
 * .---------------------.    --
@@ -53,20 +54,37 @@ ENTRY(main_entry)
 * |  [STACK_GUARD_BAND] |       /
 * '---------------------'    --
 */
-#define TOTAL_STACK_SIZE 2048   /* Must be a power of 2 for MPU configurations */
-/* Default uVisor own stack guard band
+
+/* Default total stack size including guard bands
+ * Must be a power of 2 for MPU configurations.
+ * If STACK_SIZE is predefined, it should be defined so
+ * that TOTAL_STACK_SIZE will be calculated to a power of 2. */
+#if !defined(STACK_SIZE)
+#define TOTAL_STACK_SIZE 2048
+#else
+#define TOTAL_STACK_SIZE ((STACK_SIZE * 4) / 3)
+#undef STACK_SIZE
+#endif
+
+/* uVisor own stack guard band
  * Note: Currently we use the stack guard to isolate the uVisor stack on
  *       MPU_ARMv7M MPU architecture only.
  *       In order to use SRD (sub region disabled) we set the guard to
  *       be 1/8th of the total stack size */
 #define STACK_GUARD_BAND (TOTAL_STACK_SIZE >> 3)
-/* Default uVisor stack size
+
+/* uVisor stack size
  * Note: This is uVisor own stack, not the boxes' stack. */
 #define STACK_SIZE (TOTAL_STACK_SIZE - STACK_GUARD_BAND - STACK_GUARD_BAND)
-#else
+
+#else   /* ARCH_MPU_ARMv7M */
+
 /* Default uVisor stack size
  * Note: This is uVisor own stack, not the boxes' stack. */
+#if !defined(STACK_SIZE)
 #define STACK_SIZE 2048
+#endif
+
 /* Default uVisor own stack guard band
  * Note: For MPU architectures other than MPU_ARMv7M, we do not actively use
  *       the stack guard to isolate the uVisor stack from the rest of the
@@ -74,8 +92,10 @@ ENTRY(main_entry)
  *       For this reason the symbol is arbitrarily small and cannot be defined
  *       by the platform-specific configurations. */
 #define STACK_GUARD_BAND 32
+
 #define TOTAL_STACK_SIZE (STACK_SIZE + STACK_GUARD_BAND)
-#endif
+
+#endif  /* ARCH_MPU_ARMv7M */
 
 #if !defined(SECURE_ALIAS_OFFSET)
 #define SECURE_ALIAS_OFFSET 0
